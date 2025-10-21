@@ -1,0 +1,87 @@
+
+:root{
+  /* Tweak these freely */
+  --bg: #0e1015;          /* background behind the linework */
+  --line-base: #84e1ff;   /* base color of the lines */
+  --pulse: #ffffff;       /* highlight color (soft, white works well) */
+  --tile: 256px;          /* size of your SVG tile */
+  --speed: 22s;           /* how fast the pulse drifts */
+  --throb: 4.5s;          /* how fast it “breathes” (opacity) */
+}
+
+/* Stage */
+.pulse-pattern{
+  position: relative;
+  min-height: 60vh;       /* demo sizing */
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* The linework (masked) + animated energy */
+.pulse-pattern::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  /* Stack a soft moving highlight over a solid base line color */
+  background:
+    /* moving “energy” highlight */
+    radial-gradient(150% 120% at 0% 50%, transparent 52%, rgba(255,255,255,0.65) 59%, transparent 66%) 0 0 / 300% 200%,
+    /* solid base line color (fills the strokes) */
+    linear-gradient(var(--line-base), var(--line-base));
+
+  background-blend-mode: screen;
+
+  /* Use the SVG as a tileable mask so only linework shows */
+  mask-image: url("/path/to/respite_tile.svg");
+  -webkit-mask-image: url("/path/to/respite_tile.svg");
+  mask-size: var(--tile) var(--tile);
+  -webkit-mask-size: var(--tile) var(--tile);
+  mask-repeat: repeat;
+  -webkit-mask-repeat: repeat;
+
+  /* Make it glow a touch */
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--line-base) 60%, transparent));
+
+  /* Motion */
+  animation:
+    drift var(--speed) linear infinite,
+    throb var(--throb) ease-in-out infinite;
+  opacity: 0.85;
+}
+
+/* Optional: a faint outer glow layer for depth */
+.pulse-pattern::after{
+  content: "";
+  position: absolute;
+  inset: -1px;  /* tiny overscan so glow doesn't clip */
+  background:
+    linear-gradient(var(--line-base), var(--line-base));
+  mask-image: url("/path/to/respite_tile.svg");
+  -webkit-mask-image: url("/path/to/respite_tile.svg");
+  mask-size: var(--tile) var(--tile);
+  -webkit-mask-size: var(--tile) var(--tile);
+  mask-repeat: repeat;
+  -webkit-mask-repeat: repeat;
+  filter: blur(2px) opacity(0.25);
+  pointer-events: none;
+}
+
+/* Animations */
+@keyframes drift{
+  0%   { background-position:   0% 50%, 0 0; }
+  100% { background-position: 200% 50%, 0 0; }
+}
+
+@keyframes throb{
+  0%, 100% { opacity: 0.80; }
+  50%      { opacity: 1; }
+}
+
+/* Accessibility: honor reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .pulse-pattern::before{
+    animation: throb 8s ease-in-out infinite;
+    background-position: 100% 50%, 0 0;
+  }
+}
